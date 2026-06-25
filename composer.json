@@ -1,0 +1,23 @@
+{
+  "name": "kobara/php-sdk",
+  "description": "Official PHP SDK for the Kobara API - MonCash payments and withdrawals integration",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Kobara Dev Team",
+      "email": "admin@kobara.app"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=8.0",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kobara\\": "src/"
+    }
+  }
+}
