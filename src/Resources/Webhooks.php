@@ -8,7 +8,7 @@ class Webhooks {
     /**
      * Securely verify webhook payload signature locally using HMAC SHA-256
      */
-    public static function constructEvent(string $payload, string $signature, string $secret): array {
+    public static function constructEvent(string $payload, string $signature, string $secret, int $toleranceSeconds = 300): array {
         if (empty($payload)) {
             throw new KobaraSignatureVerificationException("Payload cannot be empty");
         }
@@ -19,20 +19,23 @@ class Webhooks {
             throw new KobaraSignatureVerificationException("Webhook secret is missing");
         }
 
-        // Support both raw hex signature and t=timestamp,v1=hash format
-        $targetSignature = trim($signature);
-        if (str_contains($signature, 'v1=')) {
-            $parts = explode(',', $signature);
-            foreach ($parts as $part) {
-                $trimmedPart = trim($part);
-                if (str_starts_with($trimmedPart, 'v1=')) {
-                    $targetSignature = substr($trimmedPart, 3);
-                    break;
-                }
+        $parts = [];
+        foreach (explode(',', $signature) as $part) {
+            if (str_contains($part, '=')) {
+                [$key, $value] = explode('=', trim($part), 2);
+                $parts[$key] = $value;
             }
         }
+        $timestamp = isset($parts['t']) && ctype_digit($parts['t']) ? (int) $parts['t'] : 0;
+        $targetSignature = $parts['v1'] ?? '';
+        if ($timestamp <= 0 || !preg_match('/^[a-f0-9]{64}$/i', $targetSignature)) {
+            throw new KobaraSignatureVerificationException("Invalid Kobara-Signature format");
+        }
+        if (abs(time() - $timestamp) > $toleranceSeconds) {
+            throw new KobaraSignatureVerificationException("Webhook timestamp is outside the tolerance window");
+        }
 
-        $computed = hash_hmac('sha256', $payload, $secret);
+        $computed = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
 
         if (!hash_equals(strtolower($computed), strtolower($targetSignature))) {
             throw new KobaraSignatureVerificationException("Invalid signature. HMAC verification failed.");

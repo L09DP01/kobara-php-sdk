@@ -12,21 +12,13 @@ class Withdrawals {
     }
 
     /**
-     * Request a manual withdrawal
+     * Request a MonCash or NatCash withdrawal.
      */
     public function create(array $payload, ?string $idempotencyKey = null): array {
         $headers = [];
-        if ($idempotencyKey !== null) {
-            $headers['Idempotency-Key'] = $idempotencyKey;
-        }
+        $headers['Idempotency-Key'] = $idempotencyKey ?: bin2hex(random_bytes(16));
 
         return $this->http->request('POST', '/withdrawals', $payload, $headers);
     }
 
-    /**
-     * Retrieve a specific withdrawal by ID
-     */
-    public function retrieve(string $id): array {
-        return $this->http->request('GET', "/withdrawals/{$id}");
-    }
 }

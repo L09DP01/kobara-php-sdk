@@ -1,6 +1,6 @@
 {
   "name": "kobara/php-sdk",
-  "description": "Official PHP SDK for the Kobara API - MonCash payments and withdrawals integration",
+  "description": "Official PHP SDK for Kobara payments and MonCash/NatCash withdrawals",
   "type": "library",
   "license": "MIT",
   "authors": [
